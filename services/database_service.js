@@ -9,7 +9,8 @@ const insertUf = async (uf) => {
   const sql = "INSERT INTO uf (sigla, nome_uf) values (?, ?)";
   const values = [uf.sigla, uf.nome_uf];
   await connection.query(sql, values);
-  console.log(1)
+  console.log("\nInserido.");
+  console.log(uf);
 };
 
 const insertCidade = async (cidade) => {
@@ -28,6 +29,8 @@ const insertCidade = async (cidade) => {
   ];
 
   await connection.query(sql, values);
+  console.log("\nInserido.");
+  console.log(cidade);
 };
 
 const insertEmpresa = async (empresa) => {
@@ -47,6 +50,8 @@ const insertEmpresa = async (empresa) => {
       empresa.porte,
     ];
     await connection.query(sql, values);
+    console.log("\nInserido.");
+    console.log(empresa);
   }
 };
 

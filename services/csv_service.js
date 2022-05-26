@@ -68,5 +68,6 @@ module.exports = {
     }
 
     csvStream.end();
+    console.log("Finalizado.")
   },
 };
