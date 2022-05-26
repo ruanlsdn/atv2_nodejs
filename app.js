@@ -23,7 +23,7 @@ const csvService = require("./services/csv_service");
 
     case 2:
       cidades.forEach((cidade, i) => {
-        i <= 100 ? database.insertCidade(cidade) : null;
+        i <= 50 ? database.insertCidade(cidade) : null;
       });
       break;
 
@@ -80,7 +80,7 @@ function builderUfs(uf, cidades) {
     const result = cidades.filter((data) => data.cod_uf == item.codigo_uf);
 
     if (result.length != 0) {
-      const newUf = { sigla: item.uf, nome_uf: result?.nome_uf };
+      const newUf = { sigla: item.uf, nome_uf: result[0].nome_uf };
       !ufs.includes(newUf) ? ufs.push(newUf) : null;
     }
   });
