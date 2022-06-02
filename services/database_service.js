@@ -33,13 +33,19 @@ const insertCidade = async (cidade) => {
   console.log(cidade);
 };
 
-const insertEmpresa = async (empresa) => {
+const insertEmpresa = async (empresa, maioresCidades) => {
   const slug = require("slug");
   const connection = await connect();
   const sql =
-    "INSERT INTO empresa (cidade_id, slug, nome_fantasia, dt_inicio_atividade, cnae_fiscal, cep, porte) values (?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO empresa (cidade_id, slug, nome_fantasia, dt_inicio_atividade, cnae_fiscal, cep, porte, dist_1, dist_2, dist_3, dist_4) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   const cidade = await findCidadeBySiafi(empresa.municipio);
+
   if (cidade.length != 0) {
+    const distancias = [];
+    for (let i = 0; i < maioresCidades.length; i++) {
+      distancias.push(getDistanceFromLatLonInKm(maioresCidades[i], cidade));
+    }
+
     const values = [
       cidade[0].id,
       slug(empresa.nome_fantasia),
@@ -48,7 +54,12 @@ const insertEmpresa = async (empresa) => {
       empresa.cnae_fiscal,
       empresa.cep,
       empresa.porte,
+      distancias[0],
+      distancias[1],
+      distancias[2],
+      distancias[3],
     ];
+
     await connection.query(sql, values);
     console.log("\nInserido.");
     console.log(empresa);
@@ -58,7 +69,7 @@ const insertEmpresa = async (empresa) => {
 const selectEmpresaToCsv = async () => {
   const connection = await connect();
   const sql =
-    "SELECT e.nome_fantasia, e.slug, e.dt_inicio_atividade, e.porte, c.nome, u.sigla, c.populacao, c.latitude, c.longitude FROM empresa AS e " +
+    "SELECT e.nome_fantasia, e.slug, e.dt_inicio_atividade, e.porte, e.dist_1, e.dist_2, e.dist_3 ,e.dist_4, c.nome, u.sigla, c.populacao, c.latitude, c.longitude FROM empresa AS e " +
     "LEFT JOIN cidade AS c ON c.id = e.cidade_id " +
     "LEFT JOIN uf AS u ON u.id = c.uf_Id";
   const [results] = await connection.query(sql);
@@ -81,6 +92,24 @@ const findCidadeBySiafi = async (siafi) => {
 
   return result;
 };
+
+function getDistanceFromLatLonInKm(position1, position2) {
+  "use strict";
+  var deg2rad = function (deg) {
+      return deg * (Math.PI / 180);
+    },
+    R = 6371,
+    dLat = deg2rad(position2[0].latitude - position1.latitude),
+    dLng = deg2rad(position2[0].longitude - position1.longitude),
+    a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(position1.latitude)) *
+        Math.cos(deg2rad(position1.latitude)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2),
+    c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return (R * c).toFixed();
+}
 
 module.exports = {
   insertUf: insertUf,

@@ -5,11 +5,22 @@ const csvService = require("./services/csv_service");
   const database = require("./services/database_service");
 
   const uf = await csvService.convertCsvToJson("assets/uf.csv");
-  const cidade_populacao = await csvService.convertCsvToJson("assets/cidade_populacao.csv");
-  const cidade_siafi = await csvService.convertCsvToJson("assets/cidade_siafi.csv");
-  const empresas_bahia = await csvService.convertCsvToJson("assets/empresas_bahia.csv");
+  const cidade_populacao = await csvService.convertCsvToJson(
+    "assets/cidade_populacao.csv"
+  );
+  const cidade_siafi = await csvService.convertCsvToJson(
+    "assets/cidade_siafi.csv"
+  );
+  const empresas_bahia = await csvService.convertCsvToJson(
+    "assets/empresas_bahia.csv"
+  );
 
-  const cidades = builderCidades(cidade_siafi, cidade_populacao).filter((data) => data.nome_uf == "Bahia");
+  const cidades = builderCidades(cidade_siafi, cidade_populacao).filter(
+    (data) => data.nome_uf == "Bahia"
+  );
+
+  const maioresCidades = getMaioresCidades(cidades);
+
   const ufs = builderUfs(uf, cidades);
 
   const option = showMenuInformation();
@@ -25,38 +36,41 @@ const csvService = require("./services/csv_service");
       cidades.forEach((cidade, i) => {
         i <= 50 ? database.insertCidade(cidade) : null;
       });
+
       break;
 
     case 3:
       empresas_bahia.forEach((empresa) => {
-        database.insertEmpresa(empresa);
+        database.insertEmpresa(empresa, maioresCidades);
       });
       break;
 
     case 4:
       const empresas = await database.selectEmpresaToCsv();
       csvService.generateCsv(empresas);
+      break;
 
     default:
       break;
   }
-  
 })();
 
-  function showMenuInformation() {
-    console.log("1 - Inserir os dados de UF no banco de dados.");
-    console.log("2 - Inserir os dados de CIDADE no banco de dados.");
-    console.log("3 - Inserir os dados de EMPRESA no banco de dados.");
-    console.log("4 - Gerar arquivo .csv.");
+function showMenuInformation() {
+  console.log("1 - Inserir os dados de UF no banco de dados.");
+  console.log("2 - Inserir os dados de CIDADE no banco de dados.");
+  console.log("3 - Inserir os dados de EMPRESA no banco de dados.");
+  console.log("4 - Gerar arquivo .csv.");
 
-    return parseInt(read.question("Qual opcao deseja executar?\n"));
-  }
+  return parseInt(read.question("Qual opcao deseja executar?\n"));
+}
 
 function builderCidades(cidade_siafi, cidade_populacao) {
   const cidades = [];
 
   cidade_siafi.forEach((cidade) => {
-    const result = cidade_populacao.filter((data) => data.cod_ibge == cidade.codigo_ibge )[0];
+    const result = cidade_populacao.filter(
+      (data) => data.cod_ibge == cidade.codigo_ibge
+    )[0];
 
     cidades.push({
       nome: cidade.nome,
@@ -86,4 +100,25 @@ function builderUfs(uf, cidades) {
   });
 
   return ufs;
+}
+
+function getMaioresCidades(cidades) {
+  const nomes = [
+    "Salvador",
+    "Feira de Santana",
+    "Vitória da Conquista",
+    "Camaçari",
+  ];
+
+  const maioresCidades = [];
+
+  cidades.forEach((cidade) => {
+    for (let i = 0; i < nomes.length; i++) {
+      if (cidade.nome === nomes[i]) {
+        maioresCidades.push(cidade);
+      }
+    }
+  });
+
+  return maioresCidades;
 }

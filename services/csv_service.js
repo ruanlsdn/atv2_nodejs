@@ -47,6 +47,10 @@ module.exports = {
         "populacao_cidade",
         "latitude_cidade",
         "longitude_cidade",
+        "dist_1",
+        "dist_2",
+        "dist_3",
+        "dist_4",
       ],
     });
 
@@ -64,6 +68,10 @@ module.exports = {
         itens[i].populacao,
         itens[i].latitude,
         itens[i].longitude,
+        itens[i].dist_1+"KM",
+        itens[i].dist_2+"KM",
+        itens[i].dist_3+"KM",
+        itens[i].dist_4+"KM",
       ]);
     }
 
