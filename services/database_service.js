@@ -1,22 +1,22 @@
-const connect = async () => {
-  const mysql = require("mysql2/promise");
-  const con = mysql.createPool("mysql://root:password@localhost:3306/atv2_db");
-  return con;
-};
+const mysql = require("mysql2/promise");
+
+var con = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: "password",
+  database: "atv2_db",
+});
 
 const insertUf = async (uf) => {
-  const connection = await connect();
   const sql = "INSERT INTO uf (sigla, nome_uf) values (?, ?)";
   const values = [uf.sigla, uf.nome_uf];
-  await connection.query(sql, values);
+  await con.query(sql, values);
   console.log("\nInserido.");
   console.log(uf);
 };
 
 const insertCidade = async (cidade) => {
-  const connection = await connect();
-  const sql =
-    "INSERT INTO cidade (uf_id, nome, populacao, latitude, longitude, cod_ibge, cod_siafi) values (?, ?, ?, ?, ?, ?, ?)";
+  const sql = "INSERT INTO cidade (uf_id, nome, populacao, latitude, longitude, cod_ibge, cod_siafi) values (?, ?, ?, ?, ?, ?, ?)";
   const uf = await findUfByName(cidade.nome_uf);
   const values = [
     uf[0].id,
@@ -28,20 +28,19 @@ const insertCidade = async (cidade) => {
     cidade.cod_siafi,
   ];
 
-  await connection.query(sql, values);
+  con.query(sql, values);
   console.log("\nInserido.");
   console.log(cidade);
 };
 
 const insertEmpresa = async (empresa, maioresCidades) => {
   const slug = require("slug");
-  const connection = await connect();
-  const sql =
-    "INSERT INTO empresa (cidade_id, slug, nome_fantasia, dt_inicio_atividade, cnae_fiscal, cep, porte, dist_1, dist_2, dist_3, dist_4) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  const sql = "INSERT INTO empresa (cidade_id, slug, nome_fantasia, dt_inicio_atividade, cnae_fiscal, cep, porte, dist_1, dist_2, dist_3, dist_4) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   const cidade = await findCidadeBySiafi(empresa.municipio);
 
   if (cidade.length != 0) {
     const distancias = [];
+
     for (let i = 0; i < maioresCidades.length; i++) {
       distancias.push(getDistanceFromLatLonInKm(maioresCidades[i], cidade));
     }
@@ -60,36 +59,28 @@ const insertEmpresa = async (empresa, maioresCidades) => {
       distancias[3],
     ];
 
-    await connection.query(sql, values);
+    await con.query(sql, values);
     console.log("\nInserido.");
     console.log(empresa);
   }
 };
 
 const selectEmpresaToCsv = async () => {
-  const connection = await connect();
   const sql =
     "SELECT e.nome_fantasia, e.slug, e.dt_inicio_atividade, e.porte, e.dist_1, e.dist_2, e.dist_3 ,e.dist_4, c.nome, u.sigla, c.populacao, c.latitude, c.longitude FROM empresa AS e " +
     "LEFT JOIN cidade AS c ON c.id = e.cidade_id " +
     "LEFT JOIN uf AS u ON u.id = c.uf_Id";
-  const [results] = await connection.query(sql);
+  const [results] = await con.query(sql);
   return results;
 };
 
 const findUfByName = async (nome) => {
-  const connection = await connect();
-  const [result] = await connection.query(
-    "SELECT * from uf WHERE nome_uf = '" + nome + "'"
-  );
+  const [result] = await con.query("SELECT * from uf WHERE nome_uf = '" + nome + "'");
   return result;
 };
 
 const findCidadeBySiafi = async (siafi) => {
-  const connection = await connect();
-  const [result] = await connection.query(
-    "SELECT * from cidade WHERE cod_siafi = '" + siafi + "'"
-  );
-
+  const [result] = await con.query("SELECT * from cidade WHERE cod_siafi = '" + siafi + "'");
   return result;
 };
 
